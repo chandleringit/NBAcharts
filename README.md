@@ -1,237 +1,160 @@
-# de-project
-2025 Data Engineering Course Project
+# NBAcharts 🏀📊🐳
 
-## 🏗️ 專案架構概述
+用 Python 打造的 NBA 數據工程專案：從公開資料來源擷取 → 任務編排/排程 → 非同步處理 → 資料庫 → 儀表板，一條龍搞定！預設所有服務與流程都在 Docker 容器中運行，使用 Docker Compose 一鍵管理。
 
-本專案是一個完整的資料工程管道，整合了多個現代化的資料處理工具：
+快速特性 ✨
+- 🏀 NBA 主題：球隊/球員狀態、進階數據、薪資、新聞等
+- 📨 任務佇列：RabbitMQ + Celery Workers
+- 🗓️ 工作流：Airflow DAGs 定時與可觀測
+- 🗄️ 儲存：MySQL
+- 📊 視覺化：Metabase 儀表板
+- 🐳 容器化：各角色各一容器，透過同一個 docker network 互聯
 
-- **🕷️ 資料擷取**: 使用 Python 爬蟲技術擷取 Hahow 線上課程平台資料
-- **⚡ 任務調度**: 透過 Celery + RabbitMQ 實現分散式任務處理
-- **🚀 工作流程管理**: 使用 Apache Airflow 進行 ETL 流程編排
-- **🗄️ 資料存儲**: MySQL 資料庫儲存結構化資料
-- **📊 資料視覺化**: Metabase 建立商業智慧儀表板
-- **🐳 容器化部署**: Docker & Docker Compose 統一管理服務
+架構圖（全容器化 + Network + 常用埠號）🧩
+```mermaid
+flowchart LR
+  %% Sources
+  subgraph Sources
+    S1[Public NBA data sources]
+  end
 
-### 資料流程
-```
-Hahow 網站 → Python 爬蟲 → RabbitMQ → Celery Workers → MySQL → Metabase
-                ↑                                                    ↓
-            Airflow DAG                                         商業智慧報表
-```
+  %% Containers
+  subgraph Docker_Containers
+    direction LR
+    P[Python ingestion]
+    Q[RabbitMQ broker]
+    W[Celery workers]
+    DB[MySQL]
+    AF[Airflow scheduler/webserver]
+    MB[Metabase]
+  end
 
-## 資料夾結構
-```
-de-project/
-├── .venv/                                   # Python 虛擬環境
-├── .gitignore                               # Git 忽略檔案設定
-├── .python-version                          # Python 版本指定
-├── README.md                                # 專案說明文件
-├── pyproject.toml                           # Python 專案配置檔
-├── uv.lock                                  # UV 套件管理鎖定檔
-├── Dockerfile                               # Docker 映像檔配置
-│
-├── data_ingestion/                          # 🔥 核心資料擷取模組
-│   ├── __init__.py                          # Python 套件初始化
-│   ├── config.py                            # 配置檔（環境變數）
-│   ├── worker.py                            # Celery Worker 設定
-│   ├── tasks.py                             # Celery 任務定義
-│   ├── producer.py                          # 基本 Producer
-│   ├── mysql.py                             # MySQL 連線模組
-│   ├── crawler.py                           # 爬蟲基礎模組
-│   │
-│   ├── # Hahow 爬蟲相關模組
-│   ├── hahow_crawler_common.py              # Hahow 爬蟲共用函式
-│   ├── hahow_crawler_course.py              # Hahow 課程爬蟲
-│   ├── hahow_crawler_course_optimized.py    # Hahow 課程爬蟲優化版
-│   ├── hahow_crawler_course_optimized_sales.py # Hahow 課程銷售爬蟲
-│   ├── hahow_crawler_article.py             # Hahow 文章爬蟲
-│   ├── hahow_crawler_article_optimized.py   # Hahow 文章爬蟲優化版
-│   │
-│   ├── # Producer 相關模組
-│   ├── producer_crawler_hahow_all.py        # Hahow 全部資料 Producer
-│   ├── producer_crawler_hahow_by_queue.py   # Hahow 分隊列 Producer
-│   ├── producer_crawler_hahow_course.py     # Hahow 課程 Producer
-│   │
-│   └── # Tasks 相關模組
-│       ├── tasks_crawler_hahow_course.py    # Hahow 課程爬蟲任務
-│       └── tasks_crawler_hahow_article.py   # Hahow 文章爬蟲任務
-│
-├── airflow/                                 # 🚀 Apache Airflow 工作流程管理
-│   ├── airflow.cfg                          # Airflow 配置檔
-│   ├── Dockerfile                           # Airflow Docker 映像檔
-│   ├── docker-compose-airflow.yml           # Airflow Docker Compose 配置
-│   ├── logs/                                # Airflow 執行日誌
-│   ├── plugins/                             # Airflow 自訂外掛
-│   └── dags/                                # Airflow DAG 工作流程定義
-│       ├── example_first_dag.py             # 基礎範例 DAG
-│       ├── example_dummy_tasks_dag.py       # 虛擬任務範例 DAG
-│       ├── example_parallel_dag.py          # 並行任務範例 DAG
-│       ├── hahow_crawler_dag.py             # Hahow 爬蟲 DAG
-│       └── hahow_crawler_producer_dag.py    # Hahow Producer DAG
-│
-│
-├── example/                                 # 📚 SQL 範例與查詢
-│   ├── employees.sql                        # 員工資料表範例
-│   ├── students.sql                         # 學生資料表範例
-│   ├── ecommerce.sql                        # 電商資料表範例
-│   └── course_sales_queries.sql             # 課程銷售查詢範例
-│
-├── output/                                  # 📁 輸出資料目錄
-│   ├── hahow_course_*.csv                   # Hahow 課程資料
-│   └── hahow_article_*.csv                  # Hahow 文章資料
-│
-└── # Docker Compose 配置檔案
-    ├── docker-compose-broker.yml            # RabbitMQ Broker 配置
-    ├── docker-compose-mysql.yml             # MySQL 資料庫配置
-    ├── docker-compose-producer.yml          # Producer 服務配置
-    └── docker-compose-worker.yml            # Worker 服務配置
+  %% Docker network
+  subgraph Docker_Network
+    NET[my_network]
+  end
+
+  %% Data flow
+  S1 --> P --> Q --> W --> DB --> MB
+  AF --> P
+  AF --> W
+  AF --> DB
+
+  %% Network connections (all containers join the same docker network)
+  P --- NET
+  Q --- NET
+  W --- NET
+  DB --- NET
+  AF --- NET
+  MB --- NET
+
+  %% Common exposed ports (host:container)
+  Qp[Ports 15672, 5672, 5555]
+  DBp[Port 3306]
+  AFp[Port 8080]
+  MBp[Port 3000]
+
+  Q --- Qp
+  DB --- DBp
+  AF --- AFp
+  MB --- MBp
+
+  %% Styles
+  classDef docker fill:#e3f2fd,stroke:#1e88e5,stroke-width:1px,color:#0d47a1
+  classDef network fill:#e8f5e9,stroke:#2e7d32,stroke-width:1px,color:#1b5e20
+  classDef port fill:#fff3e0,stroke:#f57c00,stroke-width:1px,color:#e65100
+
+  class P,Q,W,DB,AF,MB docker
+  class NET network
+  class Qp,DBp,AFp,MBp port
 ```
 
+資料來源聲明 🔓
+- 僅使用公開可取得的 NBA 相關資料來源
+- 不依賴私有或付費封閉資料源
 
+目錄導覽 🗺️
+- [data_ingestion/](data_ingestion/)：NBA 擷取與處理腳本、任務與共用工具
+  - 例： [nba_teams_advance.py](data_ingestion/nba_teams_advance.py)、[nba_teams_state.py](data_ingestion/nba_teams_state.py)、[nba_players_state.py](data_ingestion/nba_players_state.py)、[nba_players_salary.py](data_ingestion/nba_players_salary.py)、[nba_news_udn.py](data_ingestion/nba_news_udn.py)、[nba_news_headline.py](data_ingestion/nba_news_headline.py)
+  - 任務/Worker： [worker.py](data_ingestion/worker.py)、[tasks_crawler_player_salary.py](data_ingestion/tasks_crawler_player_salary.py)
+  - 設定與連線： [config.py](data_ingestion/config.py)、[mysql.py](data_ingestion/mysql.py)、[nba_common.py](data_ingestion/nba_common.py)
+- [airflow/](airflow/)：Airflow 設定、DAG 與 Compose
+  - DAG： [NBA_data_dag.py](airflow/dags/NBA_data_dag.py)、[NBA_news_dag.py](airflow/dags/NBA_news_dag.py)
+  - Compose： [docker-compose-airflow.yml](airflow/docker-compose-airflow.yml)
+- [metabase/](metabase/)：Metabase Compose 與設定
+  - Compose： [docker-compose-metabase.yml](metabase/docker-compose-metabase.yml)
+- 根目錄 Compose： [docker-compose-broker.yml](docker-compose-broker.yml)、[docker-compose-mysql.yml](docker-compose-mysql.yml)、[docker-compose-worker.yml](docker-compose-worker.yml)、[docker-compose-producer.yml](docker-compose-producer.yml)
 
-## 指令
-
-### 🔧 環境設定
+預設運行模式（100% Docker）🐳
+- 所有服務皆以容器形式運行，並加入同一個 network: my_network
+- 建議先建立 network：
 ```bash
-# 建立虛擬環境並安裝依賴（同步）
-uv sync
-
-# 建立一個 network 讓各服務能溝通
 docker network create my_network
 ```
 
-### 🌍 環境變數設定
-本專案使用純 Python 實現自動載入 `.env` 檔案中的環境變數，無需額外套件，類似 pipenv 的行為。
-
-### 🔄 載入環境變數的方法
-
-**方法一：使用 uv 內建功能**
+一鍵啟動整套服務 🚀
 ```bash
-uv run --env-file .env data_ingestion/producer.py
-uv run --env-file .env celery -A data_ingestion.worker worker --loglevel=info
-```
-- ✅ uv 原生支援
-- ✅ 明確指定環境變數來源
-- ✅ 不污染系統環境
-
-**方法二：使用 source 載入**
-```bash
-source .env
-uv run data_ingestion/producer.py
-uv run celery -A data_ingestion.worker worker --loglevel=info
-```
-- ✅ 最簡單的方式
-- ⚠️ 會影響當前 shell 環境
-
-**方法三：直接在終端載入**
-```bash
-# 方式 1: 使用 source（最簡單）
-source .env
-python data_ingestion/hahow_crawler_article_optimized.py
-
-**特色功能：**
-- ✅ 彈性選擇：多種方式適應不同需求
-- ✅ 預設值：如果 `.env` 不存在或變數未設定，使用程式碼預設值  
-- ✅ 開發友善：類似 pipenv 的使用體驗
-
-### 📊 Metabase 商業智慧儀表板
-```bash
-# 啟動 Metabase 服務（包含 PostgreSQL）
-docker compose -f metabase/docker-compose.yml up -d
-
-# 停止 Metabase 服務
-docker compose -f metabase/docker-compose.yml down
-
-# 查看 Metabase 服務狀態
-docker compose -f metabase/docker-compose.yml ps
-
-# 存取 Metabase 網頁介面
-# http://localhost:3000
-```
-
-### 🚀 Apache Airflow 工作流程管理
-```bash
-# 啟動 Airflow 服務
-docker compose -f airflow/docker-compose-airflow.yml up -d
-
-# 停止 Airflow 服務
-docker compose -f airflow/docker-compose-airflow.yml down
-
-# 查看 Airflow 服務狀態
-docker compose -f airflow/docker-compose-airflow.yml ps
-
-# 查看 Airflow 服務日誌
-docker compose -f airflow/docker-compose-airflow.yml logs -f
-
-# 存取 Airflow 網頁介面
-# http://localhost:8080
-# 預設帳號密码: airflow / airflow
-```
-
-### 🔥 RabbitMQ Broker 與 Celery Worker
-```bash
-# 啟動 RabbitMQ Broker 服務
+# 1) Broker 與監控（RabbitMQ/Flower）
 docker compose -f docker-compose-broker.yml up -d
 
-# 停止並移除 RabbitMQ 服務
-docker compose -f docker-compose-broker.yml down
-
-# 查看服務 logs
-docker logs -f rabbitmq
-docker logs -f flower
-
-# 存取 RabbitMQ 管理介面: http://localhost:15672 (guest/guest)
-# 存取 Flower 監控介面: http://localhost:5555
-```
-
-### 🗄️ MySQL 資料庫
-```bash
-# 啟動 MySQL 服務
+# 2) 資料庫（MySQL）
 docker compose -f docker-compose-mysql.yml up -d
 
-# 停止 MySQL 服務
-docker compose -f docker-compose-mysql.yml down
-```
-
-### 🕷️ 爬蟲與任務執行
-```bash
-# 一次載入，多次使用
-source .env
-
-# Producer 發送任務
-uv run data_ingestion/producer.py
-uv run data_ingestion/producer_crawler_hahow_all.py
-uv run data_ingestion/producer_crawler_hahow_by_queue.py
-uv run data_ingestion/producer_crawler_hahow_course.py
-
-# 啟動 Worker
-uv run celery -A data_ingestion.worker worker --loglevel=info --hostname=worker1%h
-uv run celery -A data_ingestion.worker worker --loglevel=info --hostname=worker2%h
-
-# 指定 Worker concurrency
-uv run celery -A data_ingestion.worker worker --loglevel=info --hostname=worker1%h --concurrency=1
-uv run celery -A data_ingestion.worker worker --loglevel=info --hostname=worker2%h --concurrency=1
-
-# 指定 Worker queue
-uv run celery -A data_ingestion.worker worker --loglevel=info --hostname=worker1%h -Q hahow_course
-uv run celery -A data_ingestion.worker worker --loglevel=info --hostname=worker2%h -Q hahow_article
-uv run celery -A data_ingestion.worker worker --loglevel=info --hostname=worker3%h -Q hahow_course,hahow_article
-```
-
-### 🐳 Docker Compose 服務管理
-```bash
-# 啟動所有相關服務
-docker compose -f docker-compose-broker.yml up -d
-docker compose -f docker-compose-mysql.yml up -d
+# 3) Airflow（Scheduler/Webserver）
 docker compose -f airflow/docker-compose-airflow.yml up -d
+
+# 4) Workers（Celery）
+docker compose -f docker-compose-worker.yml up -d
+
+# 5) Producers（資料擷取/派發）
+docker compose -f docker-compose-producer.yml up -d
+
+# 6) Metabase（儀表板）
 docker compose -f metabase/docker-compose-metabase.yml up -d
+```
 
-# 停止所有服務
+服務入口與埠號 🌐
+- RabbitMQ 管理介面：http://localhost:15672
+- AMQP：amqp://localhost:5672
+- Flower（如有啟用）：http://localhost:5555
+- MySQL：localhost:3306
+- Airflow：http://localhost:8080 （預設帳密 airflow/airflow）
+- Metabase：http://localhost:3000
+
+關閉全部服務 ⛔
+```bash
+docker compose -f docker-compose-producer.yml down
+docker compose -f docker-compose-worker.yml down
 docker compose -f docker-compose-broker.yml down
 docker compose -f docker-compose-mysql.yml down
 docker compose -f airflow/docker-compose-airflow.yml down
 docker compose -f metabase/docker-compose-metabase.yml down
-
-# 查看所有容器狀態
-docker ps -a
 ```
+
+常見任務與流程（在 Docker 中）🏃‍♂️
+- Celery Workers 參數示例（已容器化，需在 compose 內調整或以 override 檔設定）：
+  - --concurrency N、-Q <queue1,queue2>
+- Airflow 使用
+  - 啟動後進入 Web UI 啟用所需 DAG
+  - 觀察 Task Instance logs/重試狀態
+- Producers
+  - 預設由 docker-compose-producer.yml 啟動，負責派發 NBA 擷取任務
+
+開發者角落（可選；非預設）👩‍💻
+- 若需在本機嘗試單支腳本（不建議於正式流程），請先載入環境變數後執行，例如：
+```bash
+source .env
+uv run data_ingestion/producer_crawler_player_salary.py
+python data_ingestion/nba_news_udn.py
+```
+
+疑難排解 🧯
+- 看不到任務在跑？檢查 RabbitMQ、Celery Workers 與 Airflow 排程是否啟用
+- 資料未寫入 MySQL？檢查 [data_ingestion/mysql.py](data_ingestion/mysql.py) 的連線設定與資料表初始化
+- Metabase 看不到資料？確認它能連線到 MySQL 容器（同一 network）
+- 連線失敗？確認 .env 與各 compose 檔中的服務主機名稱、帳密、埠號一致
+
+貢獻與授權 🤝
+- 歡迎提交 PR/Issue；請簡述修改動機與測試步驟
+- 建議新增 .env.example 與 Metabase dashboard 經匯出檔，提升新手上手速度
+- 授權：請參考根目錄（若尚未建立，建議補上 LICENSE）

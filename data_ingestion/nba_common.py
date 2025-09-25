@@ -2,6 +2,18 @@ import re
 from datetime import datetime, timedelta
 from typing import Optional
 
+def parse_time_string(time_str):
+    # 去掉 "Updated on " 前綴（如果有的話）
+    if time_str.startswith("Updated on "):
+        time_str = time_str.replace("Updated on ", "", 1)
+    
+    # 轉換成 datetime 格式
+    try:
+        return datetime.strptime(time_str, "%B %d, %Y %I:%M %p")
+    except ValueError as e:
+        print(f"格式錯誤: {time_str} -> {e}")
+        return None
+
 def convert_date(date_str: str) -> Optional[str]:
     """
     將相對時間表達式轉換為絕對日期時間字串。

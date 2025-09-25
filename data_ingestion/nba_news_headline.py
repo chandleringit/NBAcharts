@@ -11,9 +11,10 @@ import pandas as pd
 import time
 from datetime import datetime, timezone
 import random
+import os
 
 from data_ingestion.mysql import upload_data_to_mysql_upsert, nba_news_headline_table
-
+from data_ingestion.nba_common import parse_time_string
 
 
 
@@ -48,7 +49,7 @@ def nba_news_headline():
             # 進入full_url取得文章分類
             r = req.Request(full_url)
             r.add_header('user-agent',
-                        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/1')
+                        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36')
             resp = req.urlopen(r)
             content = resp.read()
             html = bs.BeautifulSoup(content,'html.parser')
@@ -56,10 +57,11 @@ def nba_news_headline():
             element_time = html.find('time', class_='ArticleHeader_ahDate__J3fwr')
             if element_label:
                 label_text = element_label.text.strip()
-                time_text = parse_time_string(element_time.text.strip())
+                time_text = parse_time_string(element_time.text.strip()) if element_time else None
 
             else:
                 label_text = None  # 或給預設值
+                time_text = None    
 
             title.append(title_text)
             link.append(full_url)
@@ -92,6 +94,9 @@ def nba_news_headline():
         })
     df = pd.DataFrame(all_rows)
 
+    dirname = "output"
+    if not os.path.exists(dirname):
+            os.mkdir(dirname)
     # save
     df.to_csv(f'output/nba_news_headline.csv', index=False, encoding="utf-8-sig")
     # with open('salary.json', 'w', encoding='utf-8') as f:
@@ -104,17 +109,7 @@ def nba_news_headline():
 
     print(f"nba_news_headline has been uploaded to mysql.")
 
-def parse_time_string(time_str):
-    # 去掉 "Updated on " 前綴（如果有的話）
-    if time_str.startswith("Updated on "):
-        time_str = time_str.replace("Updated on ", "", 1)
-    
-    # 轉換成 datetime 格式
-    try:
-        return datetime.strptime(time_str, "%B %d, %Y %I:%M %p")
-    except ValueError as e:
-        print(f"格式錯誤: {time_str} -> {e}")
-        return None
+
 
 
 #%%

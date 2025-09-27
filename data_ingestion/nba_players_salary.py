@@ -108,11 +108,11 @@ def player_year_salary(year:int):
 
     df = pd.DataFrame(all_raws)
     
-    # df['salary'] = df['salary'].str.replace(',', '', regex=False)
-    # df['salary'] = df['salary'].str.replace(' ', '', regex=False)
+    df['salary'] = df['salary'].str.replace(',', '', regex=False)
+    df['salary'] = df['salary'].str.replace(' ', '', regex=False)
     # df['salary'] = df['salary'].astype('Int64', errors='ignore') 
-    # df['salary'] = pd.to_numeric(df['salary'])
-    df['salary'] = pd.to_numeric(df['salary'], errors='coerce').astype(int)
+    #df['salary'] = pd.to_numeric(df['salary'])
+    df['salary'] = pd.to_numeric(df['salary']).astype(int)
     dirname = "output"
     if not os.path.exists(dirname):
         os.mkdir(dirname)

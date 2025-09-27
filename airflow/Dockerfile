@@ -35,7 +35,7 @@ COPY ../data_ingestion /opt/airflow/data_ingestion/
 RUN cd /opt/airflow && uv pip install --system -e .
 
 # 強制重新安裝 SQLAlchemy 1.4.36（解決 Airflow 2.10.4 依賴衝突）
-RUN uv pip install --system --force-reinstall --no-deps sqlalchemy==1.4.36
+RUN uv pip install --system --force-reinstall --no-deps sqlalchemy==1.4.54
 
 # 設定時區和 Airflow 主目錄
 ENV AIRFLOW_HOME=/opt/airflow

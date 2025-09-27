@@ -1,6 +1,23 @@
 import re
 from datetime import datetime, timedelta
 from typing import Optional
+import unicodedata
+
+def remove_accents_and_symbols_keep_space(text):
+    """
+    去除重音符號與所有非英數和空格的符號，保留空格與 a-zA-Z0-9。
+    """
+    if not isinstance(text, str):
+        return text
+
+    # 1. 正規化文字（去除重音符）
+    normalized = unicodedata.normalize('NFKD', text)
+    text_no_accents = ''.join([c for c in normalized if not unicodedata.combining(c)])
+
+    # 2. 移除所有非英數字與空格（保留 a-zA-Z0-9 和空格）
+    text_clean = re.sub(r'[^A-Za-z0-9 ]', '', text_no_accents)
+
+    return text_clean
 
 def parse_time_string(time_str):
     # 去掉 "Updated on " 前綴（如果有的話）

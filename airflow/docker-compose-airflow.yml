@@ -45,6 +45,7 @@ services:
       airflow db init &&
       airflow users create --username ${AIRFLOW_ADMIN_USER:-admin} --password ${AIRFLOW_ADMIN_PASS:-admin} --firstname Apache --lastname Airflow --role Admin --email admin@example.com
       "
+    container_name: NBA_airflow-init
     depends_on:
       - postgres
 

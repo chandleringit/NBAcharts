@@ -11,11 +11,10 @@ import pandas as pd
 import time
 from datetime import datetime, timezone
 import random
-import unicodedata
 import re
 import os
 from data_ingestion.mysql import  upload_data_to_mysql_upsert, nba_player_salary_table
-
+from data_ingestion.nba_common import remove_accents_and_symbols_keep_space
 
 #%% function
 def player_year_salary(year:int):
@@ -75,7 +74,7 @@ def player_year_salary(year:int):
         resp = req.urlopen(r)
         content = resp.read()
         html = bs.BeautifulSoup(content,'html.parser')
-        print(f"{year} {team_name}")
+        print(f"{year+1} {team_name}")
 
         # players
         players = html.find_all('td', {"class": "vTd-Ji__vTd-Ji"})
@@ -90,7 +89,9 @@ def player_year_salary(year:int):
         salaryAll = html.find_all('td', {"class": "RLrCiX__RLrCiX"})
         salary_list = []
         for salary in salaryAll:
-            salary_list.append(int(salary.text.strip()[1:].replace(',', '')))
+            salary_list.append((salary.text.strip()[1:].replace('w', '')))
+            salary_list.append((salary.text.strip()[1:].replace('$', '')))
+            salary_list.append((salary.text.strip()[1:].replace(',', '')))
         salary_list = salary_list[:-len(year_items)][::len(year_items)]
 
         for i in range(len(player_list)):
@@ -102,13 +103,16 @@ def player_year_salary(year:int):
                 'uploaded_at': datetime.now(timezone.utc)
             })
 
-        time.sleep(random.uniform(3, 5))  # 輕微延遲，避免封鎖
+        time.sleep(random.uniform(1, 3))  # 輕微延遲，避免封鎖
 
 
     df = pd.DataFrame(all_raws)
-    # print(df)
-   
-
+    
+    # df['salary'] = df['salary'].str.replace(',', '', regex=False)
+    # df['salary'] = df['salary'].str.replace(' ', '', regex=False)
+    # df['salary'] = df['salary'].astype('Int64', errors='ignore') 
+    # df['salary'] = pd.to_numeric(df['salary'])
+    df['salary'] = pd.to_numeric(df['salary'], errors='coerce').astype(int)
     dirname = "output"
     if not os.path.exists(dirname):
         os.mkdir(dirname)
@@ -119,27 +123,13 @@ def player_year_salary(year:int):
 
     # to mySQL
     # upload_data_to_mysql(table_name = 'nba_players_salary', df=df, mode = 'replace')
-    # data = df.to_dict(orient='records') # 將 DataFrame 轉換為字典列表
-    upload_data_to_mysql_upsert(nba_player_salary_table, all_raws)
+    data = df.to_dict(orient='records') # 將 DataFrame 轉換為字典列表
+    upload_data_to_mysql_upsert(nba_player_salary_table,  data =data)
 
     print(f"nba_players_salary has been uploaded to mysql.")
 
 
-def remove_accents_and_symbols_keep_space(text):
-    """
-    去除重音符號與所有非英數和空格的符號，保留空格與 a-zA-Z0-9。
-    """
-    if not isinstance(text, str):
-        return text
 
-    # 1. 正規化文字（去除重音符）
-    normalized = unicodedata.normalize('NFKD', text)
-    text_no_accents = ''.join([c for c in normalized if not unicodedata.combining(c)])
-
-    # 2. 移除所有非英數字與空格（保留 a-zA-Z0-9 和空格）
-    text_clean = re.sub(r'[^A-Za-z0-9 ]', '', text_no_accents)
-
-    return text_clean
 #%%
 
 if __name__ == '__main__':

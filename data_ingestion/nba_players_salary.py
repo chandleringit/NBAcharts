@@ -89,8 +89,6 @@ def player_year_salary(year:int):
         salaryAll = html.find_all('td', {"class": "RLrCiX__RLrCiX"})
         salary_list = []
         for salary in salaryAll:
-            salary_list.append((salary.text.strip()[1:].replace('w', '')))
-            salary_list.append((salary.text.strip()[1:].replace('$', '')))
             salary_list.append((salary.text.strip()[1:].replace(',', '')))
         salary_list = salary_list[:-len(year_items)][::len(year_items)]
 
@@ -109,7 +107,9 @@ def player_year_salary(year:int):
     df = pd.DataFrame(all_raws)
     
     df['salary'] = df['salary'].str.replace(',', '', regex=False)
-    df['salary'] = df['salary'].str.replace(' ', '', regex=False)
+    df['salary'] = df['salary'].str.replace('w', '', regex=False)
+    df['salary'] = df['salary'].str.replace('$', '', regex=False)
+    df['salary'] = df['salary'].str.replace('p', '', regex=False)
     # df['salary'] = df['salary'].astype('Int64', errors='ignore') 
     #df['salary'] = pd.to_numeric(df['salary'])
     df['salary'] = pd.to_numeric(df['salary']).astype(int)

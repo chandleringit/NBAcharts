@@ -449,7 +449,7 @@ requires-dist = [
     { name = "pandas", specifier = ">=2.0.3" },
     { name = "pymysql", specifier = ">=1.1.2" },
     { name = "requests", specifier = ">=2.32.4" },
-    { name = "sqlalchemy", specifier = "<2.0.0" },
+    { name = "sqlalchemy", specifier = "==1.4.54" },
 ]
 
 [[package]]

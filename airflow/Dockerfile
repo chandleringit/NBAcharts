@@ -15,6 +15,12 @@ RUN apt-get update && \
 RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/usr/local/bin sh \
  && uv --version
 
+# 安裝 Google Cloud SDK
+RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
+    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - && \
+    apt-get update -y && \
+    apt-get install google-cloud-sdk -y
+
 # 建立 Airflow 工作目錄
 RUN mkdir -p /opt/airflow
 
@@ -30,15 +36,17 @@ RUN uv pip install --system beautifulsoup4
 # 複製專案檔案到 Airflow 工作目錄
 COPY ../pyproject.toml ../uv.lock ../README.md /opt/airflow/
 COPY ../data_ingestion /opt/airflow/data_ingestion/
+COPY ../key.json /opt/airflow/key.json
 
-# 直接安裝專案依賴到系統環境（不建立虛擬環境）
+# 安裝專案依賴，然後強制重新安裝指定版本的 SQLAlchemy
 RUN cd /opt/airflow && uv pip install --system -e .
-
-# 強制重新安裝 SQLAlchemy 1.4.36（解決 Airflow 2.10.4 依賴衝突）
-RUN uv pip install --system --force-reinstall --no-deps sqlalchemy==1.4.54
+RUN uv pip install --system --reinstall sqlalchemy==1.4.36
 
 # 設定時區和 Airflow 主目錄
 ENV AIRFLOW_HOME=/opt/airflow
+
+# 設定 Google Cloud 憑證環境變數
+ENV GOOGLE_APPLICATION_CREDENTIALS=/opt/airflow/key.json
 
 # 設定語系環境和時區
 ENV LC_ALL=C.UTF-8 LANG=C.UTF-8 TZ=Asia/Taipei

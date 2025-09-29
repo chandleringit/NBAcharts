@@ -6,3 +6,4 @@ output/
 .env
 .env.example
 airflow/logs/
+key.json

@@ -108,6 +108,7 @@ def player_year_salary(year:int):
     
     df['salary'] = df['salary'].str.replace(',', '', regex=False)
     df['salary'] = df['salary'].str.replace('w', '', regex=False)
+    df['salary'] = df['salary'].str.replace('W', '', regex=False)
     df['salary'] = df['salary'].str.replace('$', '', regex=False)
     df['salary'] = df['salary'].str.replace('p', '', regex=False)
     # df['salary'] = df['salary'].astype('Int64', errors='ignore') 

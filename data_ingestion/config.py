@@ -12,3 +12,6 @@ MYSQL_PORT = int(os.environ.get("MYSQL_PORT", 3306))
 MYSQL_USERNAME = os.environ.get("MYSQL_USERNAME", "root")
 MYSQL_PASSWORD = os.environ.get("MYSQL_PASSWORD", "1234")
 MYSQL_DATABASE = os.environ.get("MYSQL_DATABASE", "mydb")
+
+# BigQuery 配置
+GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "your-project-id")

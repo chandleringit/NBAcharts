@@ -26,7 +26,7 @@ with DAG(
     dag_id='NBA_bigquery_dag',
     default_args=default_args,
     description='NBA BigQuery DAG - 從 MySQL 同步資料到 BigQuery 並進行分析',
-    schedule_interval='0 13 * * *',  # 每天 13 點執行一次（確保爬蟲任務完成後）
+    schedule_interval='0 10 * * *',  # 每天 10 點執行一次（確保爬蟲任務完成後）
     catchup=False,  # 不執行歷史任務
     max_active_runs=1,  # 同時只允許一個 DAG 實例運行
     tags=['NBA', 'crawler', 'player', 'team'],

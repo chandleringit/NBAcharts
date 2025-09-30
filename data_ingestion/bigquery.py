@@ -86,6 +86,44 @@ def nba_player_state_bq_schema():
     ]
     return schema
 
+def nba_player_table_bq_schema():
+    """定義 nba_player_table 表的 BigQuery schema"""
+    schema = [
+        bigquery.SchemaField(name="year", field_type="INTEGER"),
+        bigquery.SchemaField(name="player", field_type="STRING"),
+        bigquery.SchemaField(name="team", field_type="STRING"),
+        bigquery.SchemaField(name="salary", field_type="INTEGER"),
+        bigquery.SchemaField(name="age", field_type="INTEGER"),
+        bigquery.SchemaField(name="pos", field_type="STRING"),
+        bigquery.SchemaField(name="games", field_type="INTEGER"),
+        bigquery.SchemaField(name="games_started", field_type="INTEGER"),
+        bigquery.SchemaField(name="minutes_played", field_type="INTEGER"),
+        bigquery.SchemaField(name="field_goals", field_type="INTEGER"),
+        bigquery.SchemaField(name="field_goals_attempts", field_type="INTEGER"),
+        bigquery.SchemaField(name="field_goals_percentage", field_type="FLOAT"),
+        bigquery.SchemaField(name="3p_field_goals", field_type="INTEGER"),
+        bigquery.SchemaField(name="3p_field_goals_attempts", field_type="INTEGER"),
+        bigquery.SchemaField(name="3p_field_goals_percentage", field_type="FLOAT"),
+        bigquery.SchemaField(name="2p_field_goals", field_type="INTEGER"),
+        bigquery.SchemaField(name="2p_field_goals_attempts", field_type="INTEGER"),
+        bigquery.SchemaField(name="2p_field_goals_percentage", field_type="FLOAT"),
+        bigquery.SchemaField(name="efg_pct", field_type="FLOAT"),
+        bigquery.SchemaField(name="free_throws", field_type="INTEGER"),
+        bigquery.SchemaField(name="free_throws_attempts", field_type="INTEGER"),
+        bigquery.SchemaField(name="free_throws_percentage", field_type="FLOAT"),
+        bigquery.SchemaField(name="offensive_rebounds", field_type="INTEGER"),
+        bigquery.SchemaField(name="defensive_rebounds", field_type="INTEGER"),
+        bigquery.SchemaField(name="total_rebounds", field_type="INTEGER"),
+        bigquery.SchemaField(name="assists", field_type="INTEGER"),
+        bigquery.SchemaField(name="steals", field_type="INTEGER"),
+        bigquery.SchemaField(name="blocks", field_type="INTEGER"),
+        bigquery.SchemaField(name="turnovers", field_type="INTEGER"),
+        bigquery.SchemaField(name="personal_fouls", field_type="INTEGER"),
+        bigquery.SchemaField(name="points", field_type="INTEGER"),  
+    ]
+    return schema
+
+
 def nba_team_salary_bq_schema():
     """定義 nba_team_salary 表的 BigQuery schema"""
     schema = [

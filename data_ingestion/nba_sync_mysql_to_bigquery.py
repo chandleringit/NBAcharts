@@ -15,6 +15,7 @@ from data_ingestion.mysql import query_to_dataframe
 from data_ingestion.bigquery import (
     nba_player_salary_bq_schema,
     nba_player_state_bq_schema,
+    nba_player_table_bq_schema,
     nba_team_salary_bq_schema,
     nba_team_state_bq_schema,
     nba_team_advance_bq_schema,
@@ -35,6 +36,12 @@ tables_config = [
         'mysql_table': 'nba_player_state',
         'bq_table': 'nba_player_state',
         'schema_func': nba_player_state_bq_schema,
+        'partition_key': None  # 不需要分區
+    },
+    {   
+        'mysql_table': 'nba_player_table',
+        'bq_table': 'nba_player_table',
+        'schema_func': nba_player_table_bq_schema,
         'partition_key': None  # 不需要分區
     },
     {
